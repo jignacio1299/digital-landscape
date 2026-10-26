@@ -20,8 +20,8 @@ class Point {
   
   static comparePoints(point1, point2) {
     
-    if(point1.t < point2.t) { return -1; }
-    else if(point1.t > point2.t) { return 1; }
+    if(point1.t > point2.t) { return -1; }
+    else if(point1.t < point2.t) { return 1; }
     else { return 0; }
   }
 }
@@ -36,7 +36,7 @@ function setup() {
   background(color(0, 100, 0, 1));
   
   
-  for(let i = 0; i < 3; i++) {
+  for(let i = 0; i < 4; i++) {
     verts.push(new Point(i + 0.33));
   }
 }
