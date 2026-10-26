@@ -1,35 +1,66 @@
 class Point {
   // static speed = 0;
   constructor(speedMult) {
-    this.x = Math.cos(0);
-    this.y = Math.sin(0);
-    
     this.t = 0;
     this.speedMult = speedMult;
-    Point.d = 0.05;
+    Point.d = 0.01;
   }
   
   draw() {
-    point(this.x, this.y);
+    push();
+    
+    fill(color(0, 100, 100));
+    strokeWeight(15);
+    stroke(color(0, 0, 100));
+    point(Math.cos(this.t) * 100, Math.sin(this.t) * 100);
+    this.t += this.speedMult * Point.d;
+    
+    pop();
+  }
+  
+  static comparePoints(point1, point2) {
+    
+    if(point1.t < point2.t) { return -1; }
+    else if(point1.t > point2.t) { return 1; }
+    else { return 0; }
   }
 }
 
-let verts = [];
+let verts;
 
 function setup() {
+  verts = [];
   createCanvas(1000, 1000);
   colorMode(HSB, 360, 100, 100, 1);
   angleMode(DEGREES);
+  background(color(0, 100, 0, 1));
   
-  translate(width, height);
   
-  for(let i = 0; i < 4; i++) {
-    verts.push(new Point(i + 1));
+  for(let i = 0; i < 3; i++) {
+    verts.push(new Point(i + 0.33));
   }
 }
 
 function draw() {
-  for(let vert of verts) {
-    point(vert.x, vert.y);
+  background(color(0, 100, 0, 0.1));
+  {
+    push();
+    
+    verts.sort(Point.comparePoints);
+    console.log(verts);
+    
+    translate(500, 500);
+    fill(color(0, 100, 100, 1));
+    beginShape();
+  
+    
+    for(let vert of verts) {
+      vert.draw();
+      vertex(Math.cos(vert.t) * 100, Math.sin(vert.t) * 100);
+    }
+    endShape(CLOSE);
+    
+    pop();
   }
+  
 }
