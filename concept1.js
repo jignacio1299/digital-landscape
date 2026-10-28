@@ -1,8 +1,96 @@
+// I've used OOP in other languages before and I used these resources to use it in JS
+// ----------------------------------------- References -----------------------------------------
+// (1) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
+// (2) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor
+// (3) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+// (4) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/static
+// (5) https://www.geeksforgeeks.org/javascript/how-to-work-with-structs-in-javascript/
+// (6) https://producelikeapro.com/blog/wp-content/uploads/2022/01/Understanding-Note-Frequency-Charts-And-Why-You-Should-Be-Using-One_2.jpg
+// (7) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/at
+// ()
+
+
+
+
+class Chord {
+  constructor(freqs) {
+    this.notes = [];
+    this.active = true;
+    for(let note of freqs) {
+      this.notes.push(new MusicPoint(note));
+    }
+    
+    this.notes.sort(MusicPoint.comparePoints);
+  }
+  
+  draw() {
+    push();
+    
+    translate(500, 500);
+    fill(color(0, 100, 100, 1));
+    strokeWeight(0);
+    stroke(color(0, 100, 100, 1));
+    
+    beginShape();
+    for(let note of this.notes) {
+      vertex(Math.cos(note.t) * 125, Math.sin(note.t) * 125);
+      note.draw();
+    }
+    endShape(CLOSE);
+    
+    pop();
+  }
+  
+  
+  // Note frequency 2D array. Reference (6) has the chart I copied
+  static freqs = [
+/*--------- 0 ----- 1 ----- 2 ----- 3 ----- 4 ----- 5 ----- 6 ------ 7 --*/
+/* A  */ [27.500, 55.000, 110.00, 220.00, 440.00, 880.00, 1760.00, 3520.00],
+/* A# */ [29.140, 58.270, 116.54, 233.08, 466.16, 932.33, 1864.66, 3729.31],
+/* B  */ [30.870, 61.740, 123.47, 246.94, 493.88, 987.77, 1975.53, 3951.07],
+/* C  */ [16.350, 32.700, 65.410, 130.81, 261.63, 523.25, 1046.50, 2093.00],
+/* C# */ [17.320, 34.650, 69.300, 138.59, 277.18, 554.37, 1108.73, 2217.46],
+/* D  */ [18.350, 36.710, 73.420, 146.83, 293.66, 587.33, 1174.66, 2349.32],
+/* D# */ [19.450, 38.890, 77.780, 155.56, 311.13, 622.25, 1244.51, 2489.02],
+/* E  */ [20.600, 41.200, 82.410, 164.81, 329.63, 659.26, 1318.51, 2637.02],
+/* F  */ [21.830, 43.650, 87.310, 174.61, 349.23, 698.46, 1396.91, 2793.83],
+/* F# */ [23.120, 46.250, 92.500, 185.00, 369.99, 739.99, 1479.98, 2959.96],
+/* G  */ [24.500, 49.000, 98.000, 196.00, 392.00, 783.99, 1567.98, 3135.96],
+/* G# */ [25.960, 51.910, 103.83, 207.65, 415.30, 830.61, 1661.22, 3322.44]];
+  
+  static noteNames = [
+    ["A", "G##", "Bbb"],
+    ["A#", "Bb"],
+    ["B", "A##", "Cb"],
+    ["C", "Dbb"],
+    ["C#", "B##", "Db"],
+    ["D", "C##", "Ebb"],
+    ["D#", "Eb", "Fbb"],
+    ["E", "D##", "Fb"],
+    ["F", "E#", "Gbb"],
+    ["F#", "E##"]
+  ]
+  
+  // Converts a note string (e.g. "C4, Bb2, A#7") into a frequency from the freqs 2D array
+  //  bb = double flat
+  //  b  = flat
+  //  #  = sharp
+  //  ## = double sharp
+  noteToFreq(note) {
+    
+    // Uses String.prototype.at() to parse the string. Reference (7)
+    let octave = 
+    let note =
+  
+    
+  }
+}
+
 class MusicPoint {
   // static speed = 0;
   constructor(freq) {
     this.t = 0;
-    this.speedMult = freq / 440;
+    this.speedMult = freq / 75;
     MusicPoint.d = 0.01;
     
     this.osc = new p5.Oscillator("triangle");
@@ -24,30 +112,27 @@ class MusicPoint {
     pop();
   }
   
-  // static comparePoints(point1, point2) {
-  //   if(point1.t > point2.t) { return -1; }
-  //   else if(point1.t < point2.t) { return 1; }
-  //   else { return 0; }
-  // }
+  static comparePoints(point1, point2) {
+    if(point1.t > point2.t) { return -1; }
+    else if(point1.t < point2.t) { return 1; }
+    else { return 0; }
+  }
 }
 
 let verts;
+let chords;
 
 function setup() {
   verts = [];
+  chords = [];
   createCanvas(1000, 1000);
   colorMode(HSB, 360, 100, 100, 1);
   angleMode(DEGREES);
   background(color(0, 100, 0, 1));
   
+  // chords.push(new Chord([440, 549, 360, 110]));
+  // chords.push(new Chord([110, 440, 360, 549]));
   
-  // for(let i = 0; i < 4; i++) {
-  //   verts.push(new MusicPoint(440));
-  // }
-  verts.push(new MusicPoint(0));
-  verts.push(new MusicPoint(0));
-  verts.push(new MusicPoint(0));
-  verts.push(new MusicPoint(0));
   
 }
 
@@ -58,27 +143,11 @@ function draw() {
     return;
   }
   */
-  background(color(0, 100, 0, 1));
-  {
-    push();
-    
-    // verts.sort(MusicPoint.comparePoints);
-    console.log(verts);
-    
-    translate(500, 500);
-    fill(color(0, 100, 100, 1));
-    strokeWeight(1);
-    stroke(color(0, 100, 100, 1));
-    beginShape();
   
-    
-    for(let vert of verts) {
-      vertex(Math.cos(vert.t) * 125, Math.sin(vert.t) * 125);
-      vert.draw();
-    }
-    endShape(CLOSE);
-    
-    pop();
+  background(color(0, 100, 0, 1));
+  
+  for(let chord of chords) {
+    chord.draw();
   }
   
 }
