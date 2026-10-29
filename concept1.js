@@ -46,16 +46,17 @@ class Chord {
     pop();
   }
   
-}
+} // End Chord class
 
 class MusicNote {
   // static speed = 0;
   constructor(note) {
+    this.noteInd; // Gets set in the noteToFreq function
     this.freq = MusicNote.noteToFreq(note);
     
     this.t = 0;
-    // this.speedMult = this.freq / 75;
-    this.speedMult = this.freq / 250;
+    this.speedMult = this.freq / 75;
+    // this.speedMult = this.freq / 250;
     MusicNote.d = 0.01;
     
     this.osc = new p5.Oscillator("triangle");
@@ -88,7 +89,7 @@ class MusicNote {
   
     // Note frequency 2D array. Reference (6) has the chart I copied
   static freqs = [
-/*--------- 0 ----- 1 ----- 2 ----- 3 ----- 4 ----- 5 ----- 6 ------ 7 --*/
+/*--------- 0 ----- 1 ----- 2 ----- 3 ----- 4 ----- 5 ------ 6 ------ 7 --*/
 /* A  */ [27.500, 55.000, 110.00, 220.00, 440.00, 880.00, 1760.00, 3520.00],
 /* A# */ [29.140, 58.270, 116.54, 233.08, 466.16, 932.33, 1864.66, 3729.31],
 /* B  */ [30.870, 61.740, 123.47, 246.94, 493.88, 987.77, 1975.53, 3951.07],
@@ -102,7 +103,7 @@ class MusicNote {
 /* G  */ [24.500, 49.000, 98.000, 196.00, 392.00, 783.99, 1567.98, 3135.96],
 /* G# */ [25.960, 51.910, 103.83, 207.65, 415.30, 830.61, 1661.22, 3322.44]];
   
-// Array containing every note and its aliases.
+// Array containing every note and its enharmonics as its own array.
 // Its indicies correspond to the freqs array above.
   static noteNames = [
     ["A", "G##", "Bbb"],
@@ -124,6 +125,7 @@ class MusicNote {
   //  b  = flat
   //  #  = sharp
   //  ## = double sharp
+  // Also stores the index this note is contained in from the noteNames array into this.noteInd
   static noteToFreq(noteStr) {
     
     let octave = noteStr.charAt(noteStr.length - 1);      // The octave is the last char in the string. Reference (7) for parsing
@@ -141,12 +143,18 @@ class MusicNote {
           
           // Navigate to that row in the freqs table with the index found,
           // and return the corresponding octave
+          this.noteInd = noteInd;
           return MusicNote.freqs[noteInd][octave];
         }
       }
     }
-    
   }
+  
+} // End MusicNote class
+
+
+class musicCircle {
+  
 }
 
 let verts;
@@ -160,9 +168,7 @@ function setup() {
   angleMode(DEGREES);
   background(color(0, 100, 0, 1));
   
-  // chords.push(new Chord([440, 549, 360, 110]));
-  // chords.push(new Chord([293.66, 369.99, 440.00, 554.3, 659.26, ]));
-  chords.push(new Chord(["C#5", "A2", "A3", "E3", "G#5"]));
+  // chords.push(new Chord(["C#5", "A2", "A3", "E3", "G#5"]));
   
   
 }
