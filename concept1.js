@@ -116,19 +116,25 @@ class MusicNote {
   //  ## = double sharp
   static noteToFreq(noteStr) {
     
-    let octave = noteStr.charAt(noteStr.length - 1);      // The octave is the last char in the string. Reference (7)
-    let note = noteStr.substring(0, noteStr.length - 1);  // Reference (8)
+    let octave = noteStr.charAt(noteStr.length - 1);      // The octave is the last char in the string. Reference (7) for parsing
+    let note = noteStr.substring(0, noteStr.length - 1);  // The note is everything before the octave. Reference (8) for parsing
     
+    // Traverse the rows in the noteNames array
     for(let noteInd = 0; noteInd < MusicNote.noteNames.length; noteInd++) {
+      
+      // Then, traverse the entries in each row
       let currNames = MusicNote.noteNames[noteInd];
       for(let noteName of currNames) {
+        
+        // If any entry in noteNames matches note, then that row's is the row in the freqs table
         if(note === noteName) {
+          
+          // Navigate to that row in the freqs table with the index found,
+          // and return the corresponding octave
           return MusicNote.freqs[noteInd][octave];
         }
       }
     }
-  
-    
     
   }
 }
