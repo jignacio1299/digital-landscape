@@ -1,4 +1,5 @@
-// I've used OOP in other languages before and I used these resources to use it in JS
+
+
 // ----------------------------------------- References -----------------------------------------
 // (1) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
 // (2) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor
@@ -26,11 +27,16 @@ class Chord {
     push();
     
     translate(500, 500);
-    fill(color(0, 100, 100, 1));
-    strokeWeight(0);
+    fill(color(0, 100, 100, 0.3));
+    // noFill();
+    strokeWeight(2);
     stroke(color(0, 100, 100, 1));
     
     beginShape();
+    
+    this.notes.sort(MusicNote.comparePoints);
+    
+    
     for(let note of this.notes) {
       vertex(Math.cos(note.t) * 125, Math.sin(note.t) * 125);
       note.draw();
@@ -48,7 +54,8 @@ class MusicNote {
     this.freq = MusicNote.noteToFreq(note);
     
     this.t = 0;
-    this.speedMult = this.freq / 75;
+    // this.speedMult = this.freq / 75;
+    this.speedMult = this.freq / 250;
     MusicNote.d = 0.01;
     
     this.osc = new p5.Oscillator("triangle");
@@ -70,11 +77,14 @@ class MusicNote {
     pop();
   }
   
-  // static comparePoints(point1, point2) {
-  //   if(point1.t > point2.t) { return -1; }
-  //   else if(point1.t < point2.t) { return 1; }
-  //   else { return 0; }
-  // }
+  static comparePoints(point1, point2) {
+    
+    let t1 = point1.t % 360;
+    let t2 = point2.t % 360;
+    if(t1 > t2) { return -1; }
+    else if(t1 < t2) { return 1; }
+    else { return 0; }
+  }
   
     // Note frequency 2D array. Reference (6) has the chart I copied
   static freqs = [
