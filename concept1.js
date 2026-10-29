@@ -6,24 +6,20 @@
 // (4) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/static
 // (5) https://www.geeksforgeeks.org/javascript/how-to-work-with-structs-in-javascript/
 // (6) https://producelikeapro.com/blog/wp-content/uploads/2022/01/Understanding-Note-Frequency-Charts-And-Why-You-Should-Be-Using-One_2.jpg
-// (7) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/at
-// ()
+// (7) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
+// (8) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substring
 
 
 
 
 class Chord {
-  constructor(freqs) {
+  constructor(notes) {
     this.notes = [];
-    this.active = true;
-    for(let note of freqs) {
-      
-      let newFreq = Chord.noteToFreq(note);
-      
-      this.notes.push(new MusicPoint(newFreq));
-    }
+    this.active = true; // TODO: implement?
     
-    this.notes.sort(MusicPoint.comparePoints);
+    for(let note of notes) {
+      this.notes.push(new MusicNote(note));
+    }
   }
   
   draw() {
@@ -44,8 +40,43 @@ class Chord {
     pop();
   }
   
+}
+
+class MusicNote {
+  // static speed = 0;
+  constructor(note) {
+    this.freq = MusicNote.noteToFreq(note);
+    
+    this.t = 0;
+    this.speedMult = this.freq / 75;
+    MusicNote.d = 0.01;
+    
+    this.osc = new p5.Oscillator("triangle");
+    this.osc.amp(0.05);
+    this.osc.freq(this.freq);
+    
+    this.osc.start();
+  }
   
-  // Note frequency 2D array. Reference (6) has the chart I copied
+  draw() {
+    push();
+    
+    fill(color(0, 100, 100));
+    strokeWeight(15);
+    stroke(color(0, 0, 100));
+    point(Math.cos(this.t) * 125, Math.sin(this.t) * 125);
+    this.t += this.speedMult * MusicNote.d;
+    
+    pop();
+  }
+  
+  // static comparePoints(point1, point2) {
+  //   if(point1.t > point2.t) { return -1; }
+  //   else if(point1.t < point2.t) { return 1; }
+  //   else { return 0; }
+  // }
+  
+    // Note frequency 2D array. Reference (6) has the chart I copied
   static freqs = [
 /*--------- 0 ----- 1 ----- 2 ----- 3 ----- 4 ----- 5 ----- 6 ------ 7 --*/
 /* A  */ [27.500, 55.000, 110.00, 220.00, 440.00, 880.00, 1760.00, 3520.00],
@@ -85,64 +116,20 @@ class Chord {
   //  ## = double sharp
   static noteToFreq(noteStr) {
     
-    // Uses String.prototype.at() to parse the string. Reference (7)
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substring
-    let octave = noteStr.charAt(noteStr.length - 1);
-    let note = noteStr.substring(0, noteStr.length - 1);
-    // console.log(octave, note);
+    let octave = noteStr.charAt(noteStr.length - 1);      // Reference (7)
+    let note = noteStr.substring(0, noteStr.length - 1);  // Reference (8)
     
-    let noteInd = 0;
-    
-    for(let r = 0; r < Chord.noteNames.length; r++) {
-      let currNames = Chord.noteNames[r];
+    for(let noteInd = 0; noteInd < MusicNote.noteNames.length; noteInd++) {
+      let currNames = MusicNote.noteNames[noteInd];
       for(let noteName of currNames) {
         if(note === noteName) {
-          noteInd = r;
-          break;
+          return MusicNote.freqs[noteInd][octave];
         }
       }
     }
-    
-    
-    console.log(note, octave);
-    console.log(noteInd);
   
-    return Chord.freqs[noteInd][octave];
     
-  }
-}
-
-class MusicPoint {
-  // static speed = 0;
-  constructor(freq) {
-    this.t = 0;
-    this.speedMult = freq / 75;
-    MusicPoint.d = 0.01;
     
-    this.osc = new p5.Oscillator("triangle");
-    this.osc.amp(0.2);
-    this.osc.freq(freq);
-    
-    this.osc.start();
-  }
-  
-  draw() {
-    push();
-    
-    fill(color(0, 100, 100));
-    strokeWeight(15);
-    stroke(color(0, 0, 100));
-    point(Math.cos(this.t) * 125, Math.sin(this.t) * 125);
-    this.t += this.speedMult * MusicPoint.d;
-    
-    pop();
-  }
-  
-  static comparePoints(point1, point2) {
-    if(point1.t > point2.t) { return -1; }
-    else if(point1.t < point2.t) { return 1; }
-    else { return 0; }
   }
 }
 
@@ -159,7 +146,7 @@ function setup() {
   
   // chords.push(new Chord([440, 549, 360, 110]));
   // chords.push(new Chord([293.66, 369.99, 440.00, 554.3, 659.26, ]));
-  chords.push(new Chord(["C#6", "A2", "A3"]));
+  chords.push(new Chord(["C#5", "A2", "A3", "E3", "G#5"]));
   
   
 }
