@@ -116,7 +116,7 @@ class MusicNote {
   //  ## = double sharp
   static noteToFreq(noteStr) {
     
-    let octave = noteStr.charAt(noteStr.length - 1);      // Reference (7)
+    let octave = noteStr.charAt(noteStr.length - 1);      // The octave is the last char in the string. Reference (7)
     let note = noteStr.substring(0, noteStr.length - 1);  // Reference (8)
     
     for(let noteInd = 0; noteInd < MusicNote.noteNames.length; noteInd++) {
