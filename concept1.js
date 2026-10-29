@@ -17,7 +17,10 @@ class Chord {
     this.notes = [];
     this.active = true;
     for(let note of freqs) {
-      this.notes.push(new MusicPoint(note));
+      
+      let newFreq = Chord.noteToFreq(note);
+      
+      this.notes.push(new MusicPoint(newFreq));
     }
     
     this.notes.sort(MusicPoint.comparePoints);
@@ -58,30 +61,54 @@ class Chord {
 /* G  */ [24.500, 49.000, 98.000, 196.00, 392.00, 783.99, 1567.98, 3135.96],
 /* G# */ [25.960, 51.910, 103.83, 207.65, 415.30, 830.61, 1661.22, 3322.44]];
   
+// Array containing every note and its aliases.
+// Its indicies correspond to the freqs array above.
   static noteNames = [
     ["A", "G##", "Bbb"],
-    ["A#", "Bb"],
+    ["A#", "Bb", "Cbb"],
     ["B", "A##", "Cb"],
-    ["C", "Dbb"],
+    ["C", "B#", "Dbb"],
     ["C#", "B##", "Db"],
     ["D", "C##", "Ebb"],
     ["D#", "Eb", "Fbb"],
     ["E", "D##", "Fb"],
     ["F", "E#", "Gbb"],
-    ["F#", "E##"]
+    ["F#", "E##", "Gb"],
+    ["G", "F##", "Abb"],
+    ["G#", "Ab"]
   ]
   
-  // Converts a note string (e.g. "C4, Bb2, A#7") into a frequency from the freqs 2D array
+  // Converts a note string (e.g. "C4", "Bb2", "A#7") into a frequency from the freqs 2D array
   //  bb = double flat
   //  b  = flat
   //  #  = sharp
   //  ## = double sharp
-  noteToFreq(note) {
+  static noteToFreq(noteStr) {
     
     // Uses String.prototype.at() to parse the string. Reference (7)
-    let octave = 
-    let note =
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substring
+    let octave = noteStr.charAt(noteStr.length - 1);
+    let note = noteStr.substring(0, noteStr.length - 1);
+    // console.log(octave, note);
+    
+    let noteInd = 0;
+    
+    for(let r = 0; r < Chord.noteNames.length; r++) {
+      let currNames = Chord.noteNames[r];
+      for(let noteName of currNames) {
+        if(note === noteName) {
+          noteInd = r;
+          break;
+        }
+      }
+    }
+    
+    
+    console.log(note, octave);
+    console.log(noteInd);
   
+    return Chord.freqs[noteInd][octave];
     
   }
 }
@@ -94,7 +121,7 @@ class MusicPoint {
     MusicPoint.d = 0.01;
     
     this.osc = new p5.Oscillator("triangle");
-    this.osc.amp(0.05);
+    this.osc.amp(0.2);
     this.osc.freq(freq);
     
     this.osc.start();
@@ -131,7 +158,8 @@ function setup() {
   background(color(0, 100, 0, 1));
   
   // chords.push(new Chord([440, 549, 360, 110]));
-  // chords.push(new Chord([110, 440, 360, 549]));
+  // chords.push(new Chord([293.66, 369.99, 440.00, 554.3, 659.26, ]));
+  chords.push(new Chord(["C#6", "A2", "A3"]));
   
   
 }
