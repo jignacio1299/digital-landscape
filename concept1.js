@@ -55,7 +55,7 @@ class MusicNote {
     this.freq = MusicNote.noteToFreq(note);
     
     this.t = 0;
-    this.speedMult = this.freq / 75;
+    this.speedMult = this.freq / 150;
     // this.speedMult = this.freq / 250;
     MusicNote.d = 0.01;
     
@@ -153,22 +153,66 @@ class MusicNote {
 } // End MusicNote class
 
 
-class musicCircle {
+class MusicCircle {
   
-}
+  
+  constructor() {
+    this.outerCircleR = 550;
+    this.innerCircleR = 400;
+    this.middleCircleR = (this.outerCircle + this.innerCircleR) / 2;
+    this.notesArr = ["A", "E", "B", "F#", "C#", "Ab", "Eb", "Bb", "F", "C", "G", "D"];
+  }
+  draw() {
+    push();
+    
+    translate(500, 500);
+    noFill();
+    strokeWeight(5);
+    stroke(color(0, 0, 100));
+    
+    circle(0, 0, this.innerCircleR);
+    circle(0, 0, this.outerCircleR);
+    
+    for(let i = 0; i < 12; i++) {
+      let angle = PI / 6 * i;
+      
+      // push();
+
+      fill("white");
+      textSize(40);
+      textAlign(CENTER, CENTER);
+      // text("C", this.outerCircleR * Math.cos(angle), this.outerCircleR * Math.sin(angle));
+      text(this.notesArr[i], 475 / 2 * Math.cos(angle), 475 / 2 * Math.sin(angle));
+      // pop();
+      
+      angle += PI / 12;
+      
+      line(this.innerCircleR / 2 * Math.cos(angle), this.innerCircleR / 2 * Math.sin(angle), 
+           this.outerCircleR / 2 * Math.cos(angle), this.outerCircleR / 2 * Math.sin(angle));
+    }
+    
+    pop();
+  }
+} // End MusicCircle class
 
 let verts;
 let chords;
+let musicCircle;
+
 
 function setup() {
   verts = [];
   chords = [];
+  musicCircle = new MusicCircle();
   createCanvas(1000, 1000);
   colorMode(HSB, 360, 100, 100, 1);
   angleMode(DEGREES);
   background(color(0, 100, 0, 1));
   
-  // chords.push(new Chord(["C#5", "A2", "A3", "E3", "G#5"]));
+  
+  chords.push(new Chord(["C#5", "A2", "A3", "E3", "G#5"]));
+  // chords.push(new Chord(["Eb2", "Fb2", "B4", "G#3"]));
+  // chords.push(new Chord(["E4", "B#4", "G#4"]));
   
   
 }
@@ -181,10 +225,14 @@ function draw() {
   }
   */
   
+  
   background(color(0, 100, 0, 1));
+  
+  musicCircle.draw();
   
   for(let chord of chords) {
     chord.draw();
   }
+  
   
 }
