@@ -27,8 +27,7 @@ class Chord {
     push();
     
     translate(500, 500);
-    fill(color(0, 100, 100, 0.3));
-    // noFill();
+    fill(color(0, 100, 100, 0.3)); // Red TODO: REPLACE WITH SOMETHING ELSE
     strokeWeight(2);
     stroke(color(0, 100, 100, 1));
     
@@ -56,9 +55,9 @@ class MusicNote {
     
     this.t = 0;
     this.speedMult = this.freq / 150;
-    // this.speedMult = this.freq / 250;
-    MusicNote.d = 0.01;
+    MusicNote.d = 0.01; // Distance travelled per frame, scaled by speedMult
     
+    // Play the note
     this.osc = new p5.Oscillator("triangle");
     this.osc.amp(0.05);
     this.osc.freq(this.freq);
@@ -160,7 +159,8 @@ class MusicCircle {
     this.outerCircleR = 550;
     this.innerCircleR = 400;
     this.middleCircleR = (this.outerCircle + this.innerCircleR) / 2;
-    this.notesArr = ["A", "E", "B", "F#", "C#", "Ab", "Eb", "Bb", "F", "C", "G", "D"];
+    // Note order to be drawn on circle starting at 0 degrees
+    this.notesArr = ["A", "E", "B", "F#", "C#", "Ab", "Eb", "Bb", "F", "C", "G", "D"]; 
   }
   draw() {
     push();
@@ -197,15 +197,75 @@ class MusicCircle {
 } // End MusicCircle class
 
 class Gamepad {
-  processInputs() {
-    let gp = navigator.getGamePads()[0];
+  
+  constructor() {
+    this.deadzone = 0;
+    this.isConnected = navigator.getGamepads()[0] != null;
     
-    gp.buttons.forEach((button, index) => {
-      let currPressed = button.pressed;
-      let prevPressed = prevButtons[index] || false;
+    this.cursorX = 0;
+    this.cursorY = 0;
+  }
+  
+  checkConnection() {
+    this.isConnected = navigator.getGamepads()[0] != null;
+  }
+  processInputs() {
+    let gp = navigator.getGamepads()[0];
+    
+    // this.cursorX = gp.axes[0] * 475 / 2;
+    // this.cursorY = gp.axes[1] * 475 / 2;
+    // return;
+    
+    // For left joystick:
+    let inputX = gp.axes[0];
+    let inputY = gp.axes[1];
+    
+    // Apparently, the inputs for joysticks on controllers map to a squircle rather than a circle
+    // This code down below is here to try to accommodate that by fixing it at its extremes
+    if(inputX === 1) {
+      let trueAngle = Math.asin(inputY);
+      this.cursorX = Math.cos(trueAngle) * 475 / 2;
+      this.cursorY = inputY * 475 / 2;
+    }
+    else if(inputX === -1) {
+      let trueAngle = Math.asin(inputY);
+      this.cursorX = -Math.cos(trueAngle) * 475 / 2;
+      this.cursorY = inputY * 475 / 2;
+    }
+    else if(inputY === 1) {
+      let trueAngle = Math.acos(inputX);
+      this.cursorX = inputX * 475 / 2;
+      this.cursorY = Math.sin(trueAngle) * 475 / 2;
+    }
+    else if(inputY === -1) {
+      let trueAngle = Math.acos(inputX);
+      this.cursorX = inputX * 475 / 2;
+      this.cursorY = -Math.sin(trueAngle) * 475 / 2;
+    }
+    else {
+      this.cursorX = inputX * 475 / 2;
+      this.cursorY = inputY * 475 / 2;
+    }
+    
+    // this.cursorX = gp.axes[0];
+    // this.cursorY = gp.axes[1];
+    
+    if(!gp) {
+      this.isConnected = false;
+    }
+    
+    
+    // gp.buttons.forEach((button, index) => {
+    //   let currPressed = button.pressed;
+    //   let prevPressed = prevButtons[index] || false;
       
+    //   if(currPressed && !prevPressed) {
+    //     switch(index) {
+    //       case 0: //
+    //     }
+    //   }
       
-    })
+    // })
     
     
     
@@ -213,7 +273,14 @@ class Gamepad {
   }
   
   drawInputVals() {
-    gp
+    push();
+    
+    translate(500, 500);
+    fill("white");
+    
+    circle(this.cursorX, this.cursorY, 20);
+    
+    pop();
   }
 }
 
@@ -243,20 +310,25 @@ function setup() {
 
 function draw() {
   
-  /* if !connected { 
-    display not connected message
+  if(!gamePad.isConnected) { 
+    gamePad.checkConnection();
+    // Draw not connected prompt
     return;
   }
-  */
+ 
   
   
-  background(color(0, 100, 0, 1));
+  background(color(0, 100, 0, 0.5));
   
   musicCircle.draw();
   
   for(let chord of chords) {
     chord.draw();
   }
+  
+  gamePad.processInputs();
+  gamePad.drawInputVals();
+  
   
   
 }
