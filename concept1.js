@@ -46,14 +46,20 @@ class Chord {
     pop();
   }
   
+  mute() {
+    for(let note of this.notes) {
+      note.osc.stop();
+    }
+  }
+  
 } // End Chord class
 
 class MusicNote {
   // static speed = 0;
   constructor(note) {
-    this.noteInd; // Gets set in the noteToFreq function
+    this.noteInd; // Gets set in the noteToFreq function // TODO DELETE?
     this.offset; // Gets set in the noteToFreq function
-    this.freq = MusicNote.noteToFreq(note);
+    this.freq = this.noteToFreq(note);
     // Order of which notes are drawn on the circle of fifths
     this.notesArr = ["A", "E", "B", "F#", "C#", "Ab", "Eb", "Bb", "F", "C", "G", "D"];
     
@@ -131,7 +137,7 @@ class MusicNote {
   //  #  = sharp
   //  ## = double sharp
   // Also stores the index this note is contained in from the noteNames array into this.noteInd
-  static noteToFreq(noteStr) {
+  noteToFreq(noteStr) {
     
     let octave = noteStr.charAt(noteStr.length - 1);      // The octave is the last char in the string. Reference (7) for parsing
     let note = noteStr.substring(0, noteStr.length - 1);  // The note is everything before the octave. Reference (8) for parsing
@@ -220,12 +226,12 @@ class MusicCircle {
     
     let selectedInd = (int) (angle * 6 / PI);
     
-    console.log(angle, distFromCenter, selectedInd);
+    // console.log(angle, distFromCenter, selectedInd);
     
     if(distFromCenter < 200) { return; }
     
     //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes
-    console.log(this.notesArr[selectedInd] + this.selectedOctave);
+    // console.log(this.notesArr[selectedInd] + this.selectedOctave);
     
     let newNote = this.notesArr[selectedInd] + this.selectedOctave;
     
@@ -247,8 +253,14 @@ class MusicCircle {
   }
   
   playChord() {
-    console.log(this.selectedNotes);
-    // chords.push(new Chord(this.selectedNotes));
+    // console.log(this.selectedNotes);
+    if(this.selectedNotes.length === 0) { return; }
+    
+    for(let chord of chords) {
+      chord.mute();
+    }
+    
+    chords.push(new Chord(this.selectedNotes));
   }
 } // End MusicCircle class
 
