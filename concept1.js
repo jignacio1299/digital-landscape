@@ -9,6 +9,7 @@
 // (6) https://producelikeapro.com/blog/wp-content/uploads/2022/01/Understanding-Note-Frequency-Charts-And-Why-You-Should-Be-Using-One_2.jpg
 // (7) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
 // (8) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substring
+// (9) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/atan2
 
 
 
@@ -51,9 +52,12 @@ class MusicNote {
   // static speed = 0;
   constructor(note) {
     this.noteInd; // Gets set in the noteToFreq function
+    this.offset; // Gets set in the noteToFreq function
     this.freq = MusicNote.noteToFreq(note);
+    // Order of which notes are drawn on the circle of fifths
+    this.notesArr = ["A", "E", "B", "F#", "C#", "Ab", "Eb", "Bb", "F", "C", "G", "D"];
     
-    this.t = 0;
+    this.t = this.offset * (PI / 6);
     this.speedMult = this.freq / 150;
     MusicNote.d = 0.01; // Distance travelled per frame, scaled by speedMult
     
@@ -104,19 +108,21 @@ class MusicNote {
   
 // Array containing every note and its enharmonics as its own array.
 // Its indicies correspond to the freqs array above.
+// The first index in each row indicates the twelfth of the circle at which it's located
+// This twelfth will position the new note next to its note name on the circle
   static noteNames = [
-    ["A", "G##", "Bbb"],
-    ["A#", "Bb", "Cbb"],
-    ["B", "A##", "Cb"],
-    ["C", "B#", "Dbb"],
-    ["C#", "B##", "Db"],
-    ["D", "C##", "Ebb"],
-    ["D#", "Eb", "Fbb"],
-    ["E", "D##", "Fb"],
-    ["F", "E#", "Gbb"],
-    ["F#", "E##", "Gb"],
-    ["G", "F##", "Abb"],
-    ["G#", "Ab"]
+    [0,  "A", "G##", "Bbb"],
+    [7,  "A#", "Bb", "Cbb"],
+    [2,  "B", "A##", "Cb"],
+    [9,  "C", "B#", "Dbb"],
+    [4,  "C#", "B##", "Db"],
+    [11, "D", "C##", "Ebb"],
+    [6,  "D#", "Eb", "Fbb"],
+    [1,  "E", "D##", "Fb"],
+    [8,  "F", "E#", "Gbb"],
+    [3,  "F#", "E##", "Gb"],
+    [10, "G", "F##", "Abb"],
+    [5,  "G#", "Ab"]
   ]
   
   // Converts a note string (e.g. "C4", "Bb2", "A#7") into a frequency from the freqs 2D array
@@ -143,6 +149,7 @@ class MusicNote {
           // Navigate to that row in the freqs table with the index found,
           // and return the corresponding octave
           this.noteInd = noteInd;
+          this.offset = MusicNote.noteNames[noteInd][0];
           return MusicNote.freqs[noteInd][octave];
         }
       }
@@ -161,7 +168,10 @@ class MusicCircle {
     this.middleCircleR = (this.outerCircle + this.innerCircleR) / 2;
     // Note order to be drawn on circle starting at 0 degrees
     this.notesArr = ["A", "E", "B", "F#", "C#", "Ab", "Eb", "Bb", "F", "C", "G", "D"]; 
+    this.selectedNotes = [];
+    this.selectedOctave = 5;
   }
+  
   draw() {
     push();
     
@@ -169,6 +179,8 @@ class MusicCircle {
     noFill();
     strokeWeight(5);
     stroke(color(0, 0, 100));
+    textSize(40);
+    textAlign(CENTER, CENTER);
     
     circle(0, 0, this.innerCircleR);
     circle(0, 0, this.outerCircleR);
@@ -176,23 +188,67 @@ class MusicCircle {
     for(let i = 0; i < 12; i++) {
       let angle = PI / 6 * i;
       
-      // push();
-
-      noFill();
-      // noStroke();
-      textSize(40);
-      textAlign(CENTER, CENTER);
-      // text("C", this.outerCircleR * Math.cos(angle), this.outerCircleR * Math.sin(angle));
       text(this.notesArr[i], 475 / 2 * Math.cos(angle), 475 / 2 * Math.sin(angle));
-      // pop();
-      
       angle += PI / 12;
       
       line(this.innerCircleR / 2 * Math.cos(angle), this.innerCircleR / 2 * Math.sin(angle), 
            this.outerCircleR / 2 * Math.cos(angle), this.outerCircleR / 2 * Math.sin(angle));
     }
     
+    let selectedNotesStr = "";
+    
+    for(let note of this.selectedNotes) {
+      selectedNotesStr += note + " ";
+    }
+    
+    text(selectedNotesStr, 0, 350);
+    
     pop();
+  }
+  
+  // Depending on the cursor, selects a note
+  selectNote(cursorX, cursorY) {
+    // Using Math.atan2() to handle edge cases for the arctan calculation (i.e. infinity or divide by 0)
+    // Reference (9)
+    let angle = Math.atan2(cursorY, cursorX) + (PI / 12);
+    
+    if(angle < 0) {
+      angle += 2 * PI;
+    }
+    //https://p5js.org/reference/p5/dist/
+    let distFromCenter = dist(0, 0, cursorX, cursorY);
+    
+    let selectedInd = (int) (angle * 6 / PI);
+    
+    console.log(angle, distFromCenter, selectedInd);
+    
+    if(distFromCenter < 200) { return; }
+    
+    //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes
+    console.log(this.notesArr[selectedInd] + this.selectedOctave);
+    
+    let newNote = this.notesArr[selectedInd] + this.selectedOctave;
+    
+    let noteInd = this.selectedNotes.indexOf(newNote) // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf
+    if(this.selectedNotes.indexOf(newNote) !== -1) {
+      this.selectedNotes.splice(noteInd, 1); // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
+    }
+    else {
+      this.selectedNotes.push(newNote);
+    }
+  }
+  
+  moveOctave(diff) {
+    this.selectedOctave += diff;
+    
+    if(this.selectedOctave < 0 || this.selectedOctave > 7) {
+      this.selectedOctave -= diff;
+    }
+  }
+  
+  playChord() {
+    console.log(this.selectedNotes);
+    // chords.push(new Chord(this.selectedNotes));
   }
 } // End MusicCircle class
 
@@ -204,11 +260,14 @@ class Gamepad {
     
     this.cursorX = 0;
     this.cursorY = 0;
+    
+    this.prevButtons = [];
   }
   
   checkConnection() {
     this.isConnected = navigator.getGamepads()[0] != null;
   }
+  
   processInputs() {
     let gp = navigator.getGamepads()[0];
     
@@ -247,25 +306,33 @@ class Gamepad {
       this.cursorY = inputY * 475 / 2;
     }
     
-    // this.cursorX = gp.axes[0];
-    // this.cursorY = gp.axes[1];
-    
     if(!gp) {
       this.isConnected = false;
     }
     
     
-    // gp.buttons.forEach((button, index) => {
-    //   let currPressed = button.pressed;
-    //   let prevPressed = prevButtons[index] || false;
+    gp.buttons.forEach((button, index) => {
+      let currPressed = button.pressed;
+      let prevPressed = this.prevButtons[index] || false;
       
-    //   if(currPressed && !prevPressed) {
-    //     switch(index) {
-    //       case 0: //
-    //     }
-    //   }
+      if(currPressed && !prevPressed) {
+        switch(index) {
+          case 0: // A
+            musicCircle.selectNote(this.cursorX, this.cursorY);
+            break;
+          case 4: // LB
+            musicCircle.moveOctave(-1);
+            break;
+          case 5: // RB
+            musicCircle.moveOctave(1);
+            break;
+          case 10:
+            musicCircle.playChord();
+        }
+      }
       
-    // })
+      this.prevButtons[index] = currPressed;
+    })
     
     
     
@@ -304,6 +371,7 @@ function setup() {
   // chords.push(new Chord(["C#5", "A2", "A3", "E3", "G#5"]));
   // chords.push(new Chord(["Eb2", "Fb2", "B4", "G#3"]));
   // chords.push(new Chord(["E4", "B#4", "G#4"]));
+  // chords.push(new Chord(["Ebb5"]));
   
   
 }
@@ -328,7 +396,6 @@ function draw() {
   
   gamePad.processInputs();
   gamePad.drawInputVals();
-  
   
   
 }
