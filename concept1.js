@@ -178,7 +178,8 @@ class MusicCircle {
       
       // push();
 
-      fill("white");
+      noFill();
+      // noStroke();
       textSize(40);
       textAlign(CENTER, CENTER);
       // text("C", this.outerCircleR * Math.cos(angle), this.outerCircleR * Math.sin(angle));
@@ -195,14 +196,37 @@ class MusicCircle {
   }
 } // End MusicCircle class
 
+class Gamepad {
+  processInputs() {
+    let gp = navigator.getGamePads()[0];
+    
+    gp.buttons.forEach((button, index) => {
+      let currPressed = button.pressed;
+      let prevPressed = prevButtons[index] || false;
+      
+      
+    })
+    
+    
+    
+    
+  }
+  
+  drawInputVals() {
+    gp
+  }
+}
+
 let verts;
 let chords;
 let musicCircle;
+let gamePad;
 
 
 function setup() {
   verts = [];
   chords = [];
+  gamePad = new Gamepad();
   musicCircle = new MusicCircle();
   createCanvas(1000, 1000);
   colorMode(HSB, 360, 100, 100, 1);
@@ -210,7 +234,7 @@ function setup() {
   background(color(0, 100, 0, 1));
   
   
-  chords.push(new Chord(["C#5", "A2", "A3", "E3", "G#5"]));
+  // chords.push(new Chord(["C#5", "A2", "A3", "E3", "G#5"]));
   // chords.push(new Chord(["Eb2", "Fb2", "B4", "G#3"]));
   // chords.push(new Chord(["E4", "B#4", "G#4"]));
   
