@@ -28,9 +28,19 @@ class Chord {
     push();
     
     translate(500, 500);
-    fill(color(0, 100, 100, 0.3)); // Red TODO: REPLACE WITH SOMETHING ELSE
+    let fillAlpha;
+    let strokeAlpha;
+    if(this.active) {
+      fillAlpha = 0.3; 
+      strokeAlpha = 1;
+    }
+    else {
+      fillAlpha = 0.1;
+      strokeAlpha = 0.3;
+    }
+    fill(color(0, 100, 100, fillAlpha)); // Red TODO: REPLACE WITH SOMETHING ELSE
     strokeWeight(2);
-    stroke(color(0, 100, 100, 1));
+    stroke(color(0, 100, 100, strokeAlpha));
     
     beginShape();
     
@@ -47,6 +57,7 @@ class Chord {
   }
   
   mute() {
+    this.active = false;
     for(let note of this.notes) {
       note.osc.stop();
     }
@@ -71,16 +82,27 @@ class MusicNote {
     this.osc = new p5.Oscillator("triangle");
     this.osc.amp(0.05);
     this.osc.freq(this.freq);
-    
     this.osc.start();
+    
+    this.active = true;
   }
   
   draw() {
     push();
     
-    fill(color(0, 100, 100));
+    let fillAlpha;
+    let strokeAlpha;
+    if(this.active) {
+      fillAlpha = 1;
+      strokeAlpha = 1;
+    }
+    else {
+      fillAlpha = 0.3;
+      strokeAlpha = 0.1;
+    }
+    fill(color(0, 100, 100, fillAlpha));
     strokeWeight(15);
-    stroke(color(0, 0, 100));
+    stroke(color(0, 0, 100, strokeAlpha));
     point(Math.cos(this.t) * 125, Math.sin(this.t) * 125);
     this.t += this.speedMult * MusicNote.d;
     
@@ -254,13 +276,17 @@ class MusicCircle {
   
   playChord() {
     // console.log(this.selectedNotes);
-    if(this.selectedNotes.length === 0) { return; }
-    
     for(let chord of chords) {
       chord.mute();
     }
+    if(this.selectedNotes.length === 0) { return; }
+    
     
     chords.push(new Chord(this.selectedNotes));
+  }
+  
+  clearSelection() {
+    this.selectedNotes = [];
   }
 } // End MusicCircle class
 
@@ -338,8 +364,11 @@ class Gamepad {
           case 5: // RB
             musicCircle.moveOctave(1);
             break;
-          case 10:
+          case 10: // Left joystick press
             musicCircle.playChord();
+            break;
+          case 11: // Right joystick press
+            musicCircle.clearSelection();
         }
       }
       
