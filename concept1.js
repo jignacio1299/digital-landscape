@@ -33,6 +33,14 @@ class Chord {
     if(this.fillAlpha < 0.01) { return; }
     push();
     
+    if(this.active) {
+      this.fillAlpha = 0.3;
+      this.strokeAlpha = 1;
+    }
+    else {
+      this.fillAlpha = 0.1;
+      this.strokeAlpha = 0.1;
+    }
     translate(500, 500);
     fill(color(this.fillHue, 100, 100, this.fillAlpha));
     strokeWeight(2);
@@ -82,14 +90,18 @@ class Chord {
   
   mute() {
     this.active = false;
-    this.strokeAlpha *= 0.7;
-    this.fillAlpha *= 0.9;
+    // this.strokeAlpha *= 0.7;
+    // this.fillAlpha *= 0.9;
     for(let note of this.notes) {
       note.active = false;
       note.osc.stop();
       note.strokeAlpha *= 0.7
     }
   }
+  
+  // changeBrightness(mult) {
+  //   this.fillAlpha *= mult;
+  // }
   
 } // End Chord class
 
@@ -504,6 +516,12 @@ class Gamepad {
           case 11: // Right joystick press
             musicCircle.clearSelection();
             break;
+          // case 14:
+          //   musicCircle.changeBrightness(0.9);
+          //   break;
+          // case 15:
+          //   musicCircle.changeBrightness(1.1);
+          //   break;
         }
       }
       
