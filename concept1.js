@@ -361,16 +361,27 @@ class MusicCircle {
     chords = [];
   }
   
+  // Removes any notes that are of the selected octave from this.selectedNotes
+  clearOctave() {
+    // Iterate backwards so the splice doesn't effect the elements that need to be tracked
+    for(let i = this.selectedNotes.length - 1; i >= 0; i--) {
+      // Convert the last char of the note's name to an int and compare it to the octave
+      if(+this.selectedNotes[i].at(-1) == this.selectedOctave) {
+        this.selectedNotes.splice(i, 1); // Remove this note from the array if so
+      }
+    }
+  }
+  
   clearSelection() {
     this.selectedNotes = [];
   }
   
+  // Removes last chord from the chords array and mutes it
   popChord() {
     
     let lastChord = chords.pop();
     
     if(lastChord) {
-      
       lastChord.mute();
     }
   }
@@ -476,13 +487,16 @@ class Gamepad {
             this.cursorVisible = !this.cursorVisible;
             break;
           case 3: // X
-            musicCircle.clearChords();
+            musicCircle.clearOctave();
             break;
           case 4: // LB
             musicCircle.moveOctave(-1);
             break;
           case 5: // RB
             musicCircle.moveOctave(1);
+            break;
+          case 9:
+            musicCircle.clearChords();
             break;
           case 10: // Left joystick press
             musicCircle.playChord();
