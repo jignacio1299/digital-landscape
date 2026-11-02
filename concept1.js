@@ -1,4 +1,4 @@
-
+// Jarrette Ignacio's Digital Landscape: The Sonic Washing Machine
 
 // ----------------------------------------- References -----------------------------------------
 // (1) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
@@ -18,34 +18,25 @@
 class Chord {
   constructor(notes) {
     this.notes = [];
-    this.active = true; // TODO: implement?
+    this.active = true;
     
     for(let note of notes) {
       this.notes.push(new MusicNote(note));
     }
     
-    this.fillColor = this.averageColors();
-    this.fillAlpha = 1;
+    this.fillHue = this.averageHues();
+    this.fillAlpha = 0.3;
     this.strokeAlpha = 1;
   }
   
   draw() {
+    if(this.fillAlpha < 0.01) { return; }
     push();
     
     translate(500, 500);
-    let fillAlpha;
-    let strokeAlpha;
-    if(this.active) {
-      fillAlpha = 0.3; 
-      strokeAlpha = 1;
-    }
-    else {
-      fillAlpha = 0.1;
-      strokeAlpha = 0.3;
-    }
-    fill(color(this.fillColor, 100, 100, fillAlpha)); // Red TODO: REPLACE WITH SOMETHING ELSE
+    fill(color(this.fillHue, 100, 100, this.fillAlpha));
     strokeWeight(2);
-    stroke(color(this.fillColor, 100, 100, strokeAlpha));
+    stroke(color(this.fillHue, 100, 100, this.strokeAlpha));
     
     beginShape();
     
@@ -61,10 +52,10 @@ class Chord {
     pop();
   }
   
-  // Computes the average color of the points composing the chord
+  // Computes the average hue of the points composing the chord
   // Uses a radial average because the hue in HSB is circular
   // Reference (10) is a helpful website demonstrating how to do this
-  averageColors() {
+  averageHues() {
     if(this.notes.length === 0) { return 0; }
     
     let avgX = 0;
@@ -92,7 +83,7 @@ class Chord {
   mute() {
     this.active = false;
     this.strokeAlpha *= 0.7;
-    this.fillAlpha *= 0.8
+    this.fillAlpha *= 0.9;
     for(let note of this.notes) {
       note.active = false;
       note.osc.stop();
@@ -227,10 +218,15 @@ class MusicCircle {
     this.outerCircleR = 550;
     this.innerCircleR = 400;
     this.middleCircleR = (this.outerCircle + this.innerCircleR) / 2;
+    
     // Note order to be drawn on circle starting at 0 degrees
     this.notesArr = ["A", "E", "B", "F#", "C#", "Ab", "Eb", "Bb", "F", "C", "G", "D"]; 
     this.selectedNotes = [];
     this.selectedOctave = 5;
+    
+    // Ripple effect every time a chord is played. A circle with radius parameterized by t.
+    // Each element is a struct with color and t
+    this.ripples = []; 
   }
   
   draw() {
@@ -260,7 +256,7 @@ class MusicCircle {
       for(let note of this.selectedNotes) {
         let noteName = note.substring(0, note.length - 1);
         if(this.notesArr[i] === noteName) {
-          console.log(this.notesArr[i]);
+          // console.log(this.notesArr[i]);
           
           push();
           
@@ -299,6 +295,8 @@ class MusicCircle {
     pop();
     
     pop();
+    
+    this.drawRipples();
   }
   
   // Depending on the cursor, selects a note
@@ -347,8 +345,14 @@ class MusicCircle {
     }
     if(this.selectedNotes.length === 0) { return; }
     
-    
     chords.push(new Chord(this.selectedNotes));
+    
+    let newChordHue = chords[chords.length - 1].fillHue;
+    let newRipple = {
+      hue: newChordHue,
+      t: this.outerCircleR
+    };
+    this.ripples.push(newRipple);
   }
   
   clearChords() {
@@ -369,6 +373,23 @@ class MusicCircle {
       
       lastChord.mute();
     }
+  }
+  
+  drawRipples() {
+    push();
+    
+    translate(500, 500);
+    noFill();
+    strokeWeight(40);
+    for(let ripple of this.ripples) {
+      // let strokeAlpha = map(, 1)
+      stroke(ripple.hue, 25, 100, 3 / Math.sqrt(ripple.t));
+      
+      circle(0, 0, ripple.t + strokeWeight());
+      ripple.t += 15;
+    }
+    
+    pop();
   }
 } // End MusicCircle class
 
