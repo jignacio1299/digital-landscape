@@ -10,6 +10,7 @@
 // (7) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
 // (8) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substring
 // (9) https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/atan2
+// (10) https://iter.ca/post/hue-avg/#calculating-the-circular-average
 
 
 
@@ -22,6 +23,8 @@ class Chord {
     for(let note of notes) {
       this.notes.push(new MusicNote(note));
     }
+    
+    this.fillColor = this.averageColors();
   }
   
   draw() {
@@ -38,9 +41,9 @@ class Chord {
       fillAlpha = 0.1;
       strokeAlpha = 0.3;
     }
-    fill(color(0, 100, 100, fillAlpha)); // Red TODO: REPLACE WITH SOMETHING ELSE
+    fill(color(this.fillColor, 100, 100, fillAlpha)); // Red TODO: REPLACE WITH SOMETHING ELSE
     strokeWeight(2);
-    stroke(color(0, 100, 100, strokeAlpha));
+    stroke(color(this.fillColor, 100, 100, strokeAlpha));
     
     beginShape();
     
@@ -56,9 +59,38 @@ class Chord {
     pop();
   }
   
+  // Computes the average color of the points composing the chord
+  // Uses a radial average because the hue in HSB is circular
+  // Reference (10) is a helpful website demonstrating how to do this
+  averageColors() {
+    if(this.notes.length === 0) { return 0; }
+    
+    let avgX = 0;
+    let avgY = 0;
+    let hueResult = 0;
+    
+    for(let note of this.notes) {
+      avgX += Math.cos(note.offset);
+      avgY += Math.sin(note.offset);
+    }
+    
+    avgX /= this.notes.length;
+    avgY /= this.notes.length;
+    
+    // console.log(this.notes, avgX, avgY, Math.atan2(avgY, avgX));
+    hueResult = Math.atan2(avgY, avgX);
+    
+    if(hueResult < 0) {
+      hueResult += TWO_PI;
+    }
+    
+    return hueResult;
+  }
+  
   mute() {
     this.active = false;
     for(let note of this.notes) {
+      note.active = false;
       note.osc.stop();
     }
   }
@@ -66,15 +98,14 @@ class Chord {
 } // End Chord class
 
 class MusicNote {
-  // static speed = 0;
+  
   constructor(note) {
-    this.noteInd; // Gets set in the noteToFreq function // TODO DELETE?
     this.offset; // Gets set in the noteToFreq function
     this.freq = this.noteToFreq(note);
     // Order of which notes are drawn on the circle of fifths
     this.notesArr = ["A", "E", "B", "F#", "C#", "Ab", "Eb", "Bb", "F", "C", "G", "D"];
     
-    this.t = this.offset * (PI / 6);
+    this.t = this.offset;
     this.speedMult = this.freq / 150;
     MusicNote.d = 0.01; // Distance travelled per frame, scaled by speedMult
     
@@ -83,12 +114,15 @@ class MusicNote {
     this.osc.amp(0.05);
     this.osc.freq(this.freq);
     this.osc.start();
+    this.pitchBend = 1;
     
     this.active = true;
   }
   
   draw() {
     push();
+    this.setPitchBend()
+    this.osc.freq(this.freq * this.pitchBend);
     
     let fillAlpha;
     let strokeAlpha;
@@ -100,13 +134,17 @@ class MusicNote {
       fillAlpha = 0.3;
       strokeAlpha = 0.1;
     }
-    fill(color(0, 100, 100, fillAlpha));
     strokeWeight(15);
-    stroke(color(0, 0, 100, strokeAlpha));
+    stroke(color(this.offset, 80, 100, strokeAlpha));
     point(Math.cos(this.t) * 125, Math.sin(this.t) * 125);
     this.t += this.speedMult * MusicNote.d;
     
     pop();
+  }
+  
+  setPitchBend() {
+    if(!this.active) { return 0; }
+    this.pitchBend = map(gamePad.rt - gamePad.lt, -1, 1, 1 / Math.pow(2, 1/12), Math.pow(2, 1/12));
   }
   
   static comparePoints(point1, point2) {
@@ -132,7 +170,7 @@ class MusicNote {
 /* F  */ [21.830, 43.650, 87.310, 174.61, 349.23, 698.46, 1396.91, 2793.83],
 /* F# */ [23.120, 46.250, 92.500, 185.00, 369.99, 739.99, 1479.98, 2959.96],
 /* G  */ [24.500, 49.000, 98.000, 196.00, 392.00, 783.99, 1567.98, 3135.96],
-/* G# */ [25.960, 51.910, 103.83, 207.65, 415.30, 830.61, 1661.22, 3322.44]];
+/* G# */ [25.960, 51.910, 103.83, 207.65, 415.30, 830.61, 1661.22, 3322.44]];  
   
 // Array containing every note and its enharmonics as its own array.
 // Its indicies correspond to the freqs array above.
@@ -176,8 +214,7 @@ class MusicNote {
           
           // Navigate to that row in the freqs table with the index found,
           // and return the corresponding octave
-          this.noteInd = noteInd;
-          this.offset = MusicNote.noteNames[noteInd][0];
+          this.offset = MusicNote.noteNames[noteInd][0] * (PI / 6);
           return MusicNote.freqs[noteInd][octave];
         }
       }
@@ -206,7 +243,7 @@ class MusicCircle {
     translate(500, 500);
     noFill();
     strokeWeight(5);
-    stroke(color(0, 0, 100));
+    stroke(color(0, 0, 30, 1));
     textSize(40);
     textAlign(CENTER, CENTER);
     
@@ -215,8 +252,30 @@ class MusicCircle {
     
     for(let i = 0; i < 12; i++) {
       let angle = PI / 6 * i;
+      {
+        push();
+        noStroke();
+        fill(color(0, 0, 100, 1));
+        text(this.notesArr[i], 475 / 2 * Math.cos(angle), 475 / 2 * Math.sin(angle));
+        pop();
+      }
       
-      text(this.notesArr[i], 475 / 2 * Math.cos(angle), 475 / 2 * Math.sin(angle));
+      // This note of some octave was selected. Highlight the arc
+      for(let note of this.selectedNotes) {
+        let noteName = note.substring(0, note.length - 1);
+        if(this.notesArr[i] === noteName) {
+          console.log(this.notesArr[i]);
+          
+          push();
+          
+          noStroke();
+          fill(color(angle, 50, 100, 0.3));
+          arc(0, 0, this.outerCircleR, this.outerCircleR, angle - PI / 12, angle + PI / 12);
+          
+          pop();
+        }
+      }
+      
       angle += PI / 12;
       
       line(this.innerCircleR / 2 * Math.cos(angle), this.innerCircleR / 2 * Math.sin(angle), 
@@ -224,12 +283,24 @@ class MusicCircle {
     }
     
     let selectedNotesStr = "";
-    
-    for(let note of this.selectedNotes) {
-      selectedNotesStr += note + " ";
+    {
+      push();
+      noStroke();
+      fill(color(0, 0, 100, 1));
+      
+      for(let note of this.selectedNotes) {
+        selectedNotesStr += note + " ";
+      }
+      
+      text(selectedNotesStr, 0, 350);
+      text("Octave: " + this.selectedOctave, 0, 450);
+      
+      pop();
     }
-    
-    text(selectedNotesStr, 0, 350);
+    push();
+      fill("black");
+      circle(0, 0, this.innerCircleR);
+    pop();
     
     pop();
   }
@@ -275,7 +346,6 @@ class MusicCircle {
   }
   
   playChord() {
-    // console.log(this.selectedNotes);
     for(let chord of chords) {
       chord.mute();
     }
@@ -283,6 +353,12 @@ class MusicCircle {
     
     
     chords.push(new Chord(this.selectedNotes));
+  }
+  
+  clearChords() {
+    if(chords.length === 0) { return; }
+    chords[chords.length - 1].mute();
+    chords = [];
   }
   
   clearSelection() {
@@ -296,8 +372,12 @@ class Gamepad {
     this.deadzone = 0;
     this.isConnected = navigator.getGamepads()[0] != null;
     
+    this.cursorVisible = true;
     this.cursorX = 0;
     this.cursorY = 0;
+    
+    this.lt = 0;
+    this.rt = 0;
     
     this.prevButtons = [];
   }
@@ -309,13 +389,21 @@ class Gamepad {
   processInputs() {
     let gp = navigator.getGamepads()[0];
     
-    // this.cursorX = gp.axes[0] * 475 / 2;
-    // this.cursorY = gp.axes[1] * 475 / 2;
-    // return;
+    
+    if(!gp) {
+      this.isConnected = false;
+      return;
+    }
     
     // For left joystick:
     let inputX = gp.axes[0];
     let inputY = gp.axes[1];
+    
+    // Triggers
+    this.lt = gp.buttons[6].value;
+    this.rt = gp.buttons[7].value;
+    
+    // console.log(this.lt, this.rt);
     
     // Apparently, the inputs for joysticks on controllers map to a squircle rather than a circle
     // This code down below is here to try to accommodate that by fixing it at its extremes
@@ -344,10 +432,6 @@ class Gamepad {
       this.cursorY = inputY * 475 / 2;
     }
     
-    if(!gp) {
-      this.isConnected = false;
-    }
-    
     
     gp.buttons.forEach((button, index) => {
       let currPressed = button.pressed;
@@ -355,9 +439,17 @@ class Gamepad {
       
       if(currPressed && !prevPressed) {
         switch(index) {
-          case 0: // A
+          case 0: // B
             musicCircle.selectNote(this.cursorX, this.cursorY);
             break;
+          case 1:
+            let lastChord = chords.pop();
+            lastChord.mute();
+          case 2: // Y
+            this.cursorVisible = !this.cursorVisible;
+            break;
+          case 3: // X
+            musicCircle.clearChords();
           case 4: // LB
             musicCircle.moveOctave(-1);
             break;
@@ -375,59 +467,59 @@ class Gamepad {
       this.prevButtons[index] = currPressed;
     })
     
-    
-    
-    
   }
   
-  drawInputVals() {
+  drawCursor() {
+    
+    let alpha;
+    this.cursorVisible ? alpha = 1 : alpha = 0.2
+    const cursorSize = 30;
     push();
     
     translate(500, 500);
-    fill("white");
+    fill(color(0, 0, 100, alpha));
+    noStroke();
     
-    circle(this.cursorX, this.cursorY, 20);
+    circle(this.cursorX, this.cursorY, 15);
     
     pop();
   }
 }
 
-let verts;
+// Global objects \\
 let chords;
 let musicCircle;
 let gamePad;
 
 
 function setup() {
-  verts = [];
   chords = [];
   gamePad = new Gamepad();
   musicCircle = new MusicCircle();
   createCanvas(1000, 1000);
-  colorMode(HSB, 360, 100, 100, 1);
-  angleMode(DEGREES);
+  colorMode(HSB, TWO_PI, 100, 100, 1); // Using radians for the hue to simplify trig operations later
   background(color(0, 100, 0, 1));
-  
-  
-  // chords.push(new Chord(["C#5", "A2", "A3", "E3", "G#5"]));
-  // chords.push(new Chord(["Eb2", "Fb2", "B4", "G#3"]));
-  // chords.push(new Chord(["E4", "B#4", "G#4"]));
-  // chords.push(new Chord(["Ebb5"]));
-  
-  
 }
 
 function draw() {
   
+  background(color(0, 100, 0, 0.5));
+  
   if(!gamePad.isConnected) { 
     gamePad.checkConnection();
-    // Draw not connected prompt
+    
+    push();
+    
+    translate(500, 500);
+    textSize(50);
+    textAlign(CENTER, CENTER);
+    fill("white");
+    
+    text("Controller not connected", 0, 0);
+    
+    pop();
     return;
   }
- 
-  
-  
-  background(color(0, 100, 0, 0.5));
   
   musicCircle.draw();
   
@@ -436,7 +528,7 @@ function draw() {
   }
   
   gamePad.processInputs();
-  gamePad.drawInputVals();
+  gamePad.drawCursor();
   
   
 }
