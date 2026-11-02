@@ -39,7 +39,7 @@ class Chord {
     }
     else {
       this.fillAlpha = 0.1;
-      this.strokeAlpha = 0.1;
+      this.strokeAlpha = 0.3;
     }
     translate(500, 500);
     fill(color(this.fillHue, 100, 100, this.fillAlpha));
