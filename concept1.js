@@ -25,6 +25,8 @@ class Chord {
     }
     
     this.fillColor = this.averageColors();
+    this.fillAlpha = 1;
+    this.strokeAlpha = 1;
   }
   
   draw() {
@@ -89,9 +91,12 @@ class Chord {
   
   mute() {
     this.active = false;
+    this.strokeAlpha *= 0.7;
+    this.fillAlpha *= 0.8
     for(let note of this.notes) {
       note.active = false;
       note.osc.stop();
+      note.strokeAlpha *= 0.7
     }
   }
   
@@ -117,6 +122,7 @@ class MusicNote {
     this.pitchBend = 1;
     
     this.active = true;
+    this.strokeAlpha = 1;
   }
   
   draw() {
@@ -124,18 +130,8 @@ class MusicNote {
     this.setPitchBend()
     this.osc.freq(this.freq * this.pitchBend);
     
-    let fillAlpha;
-    let strokeAlpha;
-    if(this.active) {
-      fillAlpha = 1;
-      strokeAlpha = 1;
-    }
-    else {
-      fillAlpha = 0.3;
-      strokeAlpha = 0.1;
-    }
     strokeWeight(15);
-    stroke(color(this.offset, 80, 100, strokeAlpha));
+    stroke(color(this.offset, 80, 100, this.strokeAlpha));
     point(Math.cos(this.t) * 125, Math.sin(this.t) * 125);
     this.t += this.speedMult * MusicNote.d;
     
@@ -364,6 +360,16 @@ class MusicCircle {
   clearSelection() {
     this.selectedNotes = [];
   }
+  
+  popChord() {
+    
+    let lastChord = chords.pop();
+    
+    if(lastChord) {
+      
+      lastChord.mute();
+    }
+  }
 } // End MusicCircle class
 
 class Gamepad {
@@ -443,13 +449,14 @@ class Gamepad {
             musicCircle.selectNote(this.cursorX, this.cursorY);
             break;
           case 1:
-            let lastChord = chords.pop();
-            lastChord.mute();
+            musicCircle.popChord();
+            break;
           case 2: // Y
             this.cursorVisible = !this.cursorVisible;
             break;
           case 3: // X
             musicCircle.clearChords();
+            break;
           case 4: // LB
             musicCircle.moveOctave(-1);
             break;
@@ -461,6 +468,7 @@ class Gamepad {
             break;
           case 11: // Right joystick press
             musicCircle.clearSelection();
+            break;
         }
       }
       
